@@ -1,6 +1,6 @@
 pragma solidity ^0.4.19;
 
-import "ds-token/base.sol";
+import "ds-token/token.sol";
 
 contract Token is DSTokenBase {
     uint8 public decimals = 18;
