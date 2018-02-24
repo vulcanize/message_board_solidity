@@ -8,6 +8,13 @@ contract LotteryMock is Lottery {
     function setRewardPool(uint256 _rewardPool) public {
         rewardPool = _rewardPool;
     }
+    uint256 _now;
+    function warp(uint256 _warp) external {
+        _now += _warp;
+    }
+    function era() internal view returns (uint256) {
+        return _now;
+    }
 }
 contract LotteryTest is DSTest {
     Token token;
@@ -35,6 +42,10 @@ contract LotteryTest is DSTest {
         );
     }
 
+    function testFail_earlyEpoch() public {
+        lottery.endEpoch();
+    }
+
     function assertNoWinners() internal {
         assertEq(lottery.payouts(0), 0);
         assertEq(lottery.payouts(1), 0);
@@ -42,16 +53,20 @@ contract LotteryTest is DSTest {
         assertEq(lottery.payouts(3), 0);
         assertEq(lottery.payouts(4), 0);
     }
+    function nextEpoch() internal {
+        lottery.warp(1 days);
+        lottery.endEpoch();
+    }
 
     function test_emptyEpoch() public {
-        lottery.endEpoch();
+        nextEpoch();
         assertNoWinners();
-        lottery.endEpoch();
+        nextEpoch();
         assertNoWinners();
         
         forum.post(0x0, 0x0);
         lottery.upvote(1);
-        lottery.endEpoch();
+        nextEpoch();
         assertNoWinners();
     }
 
@@ -59,7 +74,7 @@ contract LotteryTest is DSTest {
         forum.post(0x0, 0x0);
         forum.post(0x0, 0x0);
 
-        lottery.endEpoch();
+        nextEpoch();
         assertNoWinners();
         assertEq(lottery.epochPrior(), 0);
         assertEq(lottery.epochCurrent(), 3);
@@ -68,7 +83,7 @@ contract LotteryTest is DSTest {
         lottery.upvote(2);
         lottery.upvote(1);
         lottery.upvote(3);
-        lottery.endEpoch();
+        nextEpoch();
         assertEq(lottery.payouts(0), this);
         assertEq(lottery.payouts(1), this);
         assertEq(lottery.payouts(2), 0);
@@ -79,7 +94,7 @@ contract LotteryTest is DSTest {
         //lottery.claim(1);
 
         lottery.downvote(3);
-        lottery.endEpoch();
+        nextEpoch();
         assertNoWinners();
     }
 }

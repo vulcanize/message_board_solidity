@@ -6,6 +6,7 @@ import "./forum.sol";
 contract Lottery {
     Token token;
     Forum forum;
+    uint256 public epochTimestamp;
     uint256 public epochPrior;
     uint256 public epochCurrent;
     mapping (uint256 => int256) votes;
@@ -31,6 +32,9 @@ contract Lottery {
     function downvote(uint256 _offset) external vote(_offset, -1) {
     }
     function endEpoch() external {
+        require(era() >= epochTimestamp + 1 days);
+        epochTimestamp = era();
+
         uint256[5] memory winners; 
         int256[5] memory topVotes;
         // get top 5 posts
@@ -85,5 +89,8 @@ contract Lottery {
         require(payouts[_payout] == msg.sender);
         payouts[_payout] = 0;
         token.transfer(msg.sender, reward(_payout));
+    }
+    function era() internal view returns (uint256) {
+        return now;
     }
 }
