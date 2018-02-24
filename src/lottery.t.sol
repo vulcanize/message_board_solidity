@@ -35,12 +35,32 @@ contract LotteryTest is DSTest {
         );
     }
 
+    function assertNoWinners() internal {
+        assertEq(lottery.payouts(0), 0);
+        assertEq(lottery.payouts(1), 0);
+        assertEq(lottery.payouts(2), 0);
+        assertEq(lottery.payouts(3), 0);
+        assertEq(lottery.payouts(4), 0);
+    }
+
+    function test_emptyEpoch() public {
+        lottery.endEpoch();
+        assertNoWinners();
+        lottery.endEpoch();
+        assertNoWinners();
+        
+        forum.post(0x0, 0x0);
+        lottery.upvote(1);
+        lottery.endEpoch();
+        assertNoWinners();
+    }
+
     function test_epoch() public {
         forum.post(0x0, 0x0);
         forum.post(0x0, 0x0);
 
         lottery.endEpoch();
-        assertEq(lottery.payouts(0), 0);
+        assertNoWinners();
         assertEq(lottery.epochPrior(), 0);
         assertEq(lottery.epochCurrent(), 3);
 
@@ -55,16 +75,11 @@ contract LotteryTest is DSTest {
         assertEq(lottery.payouts(3), 0);
         assertEq(lottery.payouts(4), 0);
         assertEq(lottery.epochCurrent(), lottery.epochPrior() + 1);
+        //lottery.claim(0);
+        //lottery.claim(1);
 
         lottery.downvote(3);
         lottery.endEpoch();
-        assertEq(lottery.payouts(0), 0);
-        assertEq(lottery.payouts(1), 0);
-        assertEq(lottery.payouts(2), 0);
-        assertEq(lottery.payouts(3), 0);
-        assertEq(lottery.payouts(4), 0);
-
-        //lottery.claim(0);
-        //lottery.claim(1);
+        assertNoWinners();
     }
 }
