@@ -44,15 +44,25 @@ contract LotteryTest is DSTest {
         assertEq(lottery.epochPrior(), 0);
         assertEq(lottery.epochCurrent(), 3);
 
-        lottery.vote(2);
-        lottery.vote(1);
+        forum.post(0x0, 0x0);
+        lottery.upvote(2);
+        lottery.upvote(1);
+        lottery.upvote(3);
         lottery.endEpoch();
         assertEq(lottery.payouts(0), this);
         assertEq(lottery.payouts(1), this);
         assertEq(lottery.payouts(2), 0);
         assertEq(lottery.payouts(3), 0);
         assertEq(lottery.payouts(4), 0);
-        assertEq(lottery.epochCurrent(), lottery.epochPrior());
+        assertEq(lottery.epochCurrent(), lottery.epochPrior() + 1);
+
+        lottery.downvote(3);
+        lottery.endEpoch();
+        assertEq(lottery.payouts(0), 0);
+        assertEq(lottery.payouts(1), 0);
+        assertEq(lottery.payouts(2), 0);
+        assertEq(lottery.payouts(3), 0);
+        assertEq(lottery.payouts(4), 0);
 
         //lottery.claim(0);
         //lottery.claim(1);
