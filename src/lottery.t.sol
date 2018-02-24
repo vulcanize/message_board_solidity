@@ -45,6 +45,10 @@ contract LotteryTest is DSTest {
     function testFail_earlyEpoch() public {
         lottery.endEpoch();
     }
+    function testFail_earlySecondEpoch() public {
+        nextEpoch();
+        lottery.endEpoch();
+    }
 
     function assertNoWinners() internal {
         assertEq(lottery.payouts(0), 0);
