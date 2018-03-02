@@ -4,7 +4,7 @@ import "./token.sol";
 import "./forum.sol";
 
 contract Lottery {
-    Token token;
+    ERC20 token;
     Forum forum;
     uint256 public epochTimestamp;
     uint256 public epochPrior;
@@ -24,7 +24,7 @@ contract Lottery {
         int8 priorVote = voters[_offset][msg.sender];
         votes[_offset] += _direction - priorVote;
         voters[_offset][msg.sender] = _direction;
-        //token.transferFrom(msg.sender, this, 1);// TODO determine actual consumption
+        token.transferFrom(msg.sender, this, 1 ether);
         _;
     }
     function upvote(uint256 _offset) external vote(_offset, 1) {

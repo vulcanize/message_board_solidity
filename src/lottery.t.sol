@@ -21,11 +21,22 @@ contract LotteryTest is DSTest {
     Forum forum;
     LotteryMock lottery;
     function setUp() public {
-        token = new Token(5);
-        forum = new Forum();
+        token = new Token(1000000000 ether);
+        forum = new Forum(token);
         lottery = new LotteryMock(token, forum);
     }
-    function test_reward() public {
+    modifier test {
+        token.approve(forum, 10 ether);
+        token.approve(lottery, 10 ether);
+        _;
+    }
+    function testFail_noApprovePost() public {
+        forum.post(0x0,0x0);
+    }
+    function testFail_noApproveVote() public {
+        lottery.upvote(0);
+    }
+    function test_reward() public test {
         lottery.setRewardPool(5000);
         assertEq(lottery.reward(0), 2000);
         assertEq(lottery.reward(1), 1250);
@@ -42,10 +53,10 @@ contract LotteryTest is DSTest {
         );
     }
 
-    function testFail_earlyEpoch() public {
+    function testFail_earlyEpoch() public test {
         lottery.endEpoch();
     }
-    function testFail_earlySecondEpoch() public {
+    function testFail_earlySecondEpoch() public test {
         nextEpoch();
         lottery.endEpoch();
     }
@@ -62,7 +73,7 @@ contract LotteryTest is DSTest {
         lottery.endEpoch();
     }
 
-    function test_emptyEpoch() public {
+    function test_emptyEpoch() public test {
         nextEpoch();
         assertNoWinners();
         nextEpoch();
@@ -74,7 +85,7 @@ contract LotteryTest is DSTest {
         assertNoWinners();
     }
 
-    function test_epoch() public {
+    function test_epoch() public test {
         forum.post(0x0, 0x0);
         forum.post(0x0, 0x0);
 
@@ -94,8 +105,11 @@ contract LotteryTest is DSTest {
         assertEq(lottery.payouts(3), 0);
         assertEq(lottery.payouts(4), 0);
         assertEq(lottery.epochCurrent(), lottery.epochPrior() + 1);
-        //lottery.claim(0);
-        //lottery.claim(1);
+        uint256 balance = token.balanceOf(this);
+        lottery.claim(0);
+        lottery.claim(1);
+        uint256 balanceAfter = token.balanceOf(this);
+        assertEq(balance + lottery.reward(0) + lottery.reward(1), balanceAfter);
 
         lottery.downvote(3);
         nextEpoch();
