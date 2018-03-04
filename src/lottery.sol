@@ -24,7 +24,7 @@ contract Lottery {
         int8 priorVote = voters[_offset][msg.sender];
         votes[_offset] += _direction - priorVote;
         voters[_offset][msg.sender] = _direction;
-        token.transferFrom(msg.sender, this, 1 ether);
+        require(token.transferFrom(msg.sender, this, 1 ether));
         _;
     }
     function upvote(uint256 _offset) external vote(_offset, 1) {

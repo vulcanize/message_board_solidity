@@ -36,7 +36,7 @@ contract Forum {
     // a parent of 0x0 indicates root topic
     event Topic(uint256 _parent, bytes32 contentHash);
     function post(uint256 _parent, bytes32 _contentHash) external {
-        token.transferFrom(msg.sender, beneficiary, 1 ether);
+        require(token.transferFrom(msg.sender, beneficiary, 1 ether));
         Topic(_parent, _contentHash);
         posters.push(msg.sender);
     }
