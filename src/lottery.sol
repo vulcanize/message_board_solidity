@@ -4,6 +4,7 @@ import "./token.sol";
 import "./forum.sol";
 
 contract Lottery {
+    // this token *must* assert in transferFrom without allowance
     ERC20 token;
     Forum forum;
     uint256 public epochTimestamp;

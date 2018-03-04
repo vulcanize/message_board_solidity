@@ -5,6 +5,7 @@ import "ds-token/token.sol";
 contract Forum {
     address[] public posters;
 
+    // this token *must* assert in transferFrom without allowance
     ERC20 public token;
     // receives all the tokens
     address public beneficiary;
