@@ -24,14 +24,17 @@ contract Voter {
         lottery = _lottery;
         forum = _forum;
         token = _token;
-        token.approve(lottery, 5 ether);
-        token.approve(forum, 5 ether);
+        token.approve(lottery, 10 ether);
+        token.approve(forum, 10 ether);
     }
     function upvote(uint _index) external {
         lottery.upvote(_index);
     }
     function downvote(uint _index) external {
         lottery.downvote(_index);
+    }
+    function unvote(uint256 _index) external {
+        lottery.unvote(_index);
     }
     function post() external {
         forum.post(0x0, 0x0);
@@ -189,7 +192,47 @@ contract LotteryTest is DSTest {
         lottery.claim(2);
     }
 
-    function test_upvoteDownvote() public {
-        // TODO
+    function test_upvoteDownvote() public test {
+        Voter v1 = new Voter(lottery, forum, token);
+        token.transfer(v1, 10 ether);
+        Voter v2 = new Voter(lottery, forum, token);
+        token.transfer(v2, 10 ether);
+
+        lottery.upvote(1);
+        assertEq(lottery.votes(1), 1);
+        v1.upvote(1);
+        assertEq(lottery.votes(1), 2);
+        v2.upvote(1);
+        assertEq(lottery.votes(1), 3);
+        lottery.downvote(1);
+        assertEq(lottery.votes(1), 1);
+        v1.downvote(1);
+        assertEq(lottery.votes(1), -1);
+        v2.downvote(1);
+        assertEq(lottery.votes(1), -3);
+
+        v2.downvote(2);
+        assertEq(lottery.votes(2), -1);
+        v1.downvote(2);
+        assertEq(lottery.votes(2), -2);
+        lottery.downvote(2);
+        assertEq(lottery.votes(2), -3);
+
+        assertEq(lottery.votes(3), 0);
+        v2.unvote(3);
+        assertEq(lottery.votes(3), 0);
+        v1.upvote(3);
+        assertEq(lottery.votes(3), 1);
+        v2.upvote(3);
+        assertEq(lottery.votes(3), 2);
+        v2.downvote(3);
+        assertEq(lottery.votes(3), 0);
+        v2.unvote(3);
+        assertEq(lottery.votes(3), 1);
+    }
+
+    function testFail_noTokens() public test {
+        Voter v1 = new Voter(lottery, forum, token);
+        v1.upvote(1);
     }
 }

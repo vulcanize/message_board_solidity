@@ -10,7 +10,7 @@ contract Lottery {
     uint256 public epochTimestamp;
     uint256 public epochPrior;
     uint256 public epochCurrent;
-    mapping (uint256 => int256) votes;
+    mapping (uint256 => int256) public votes;
     mapping (uint256 => mapping (address => int8)) voters;
 
     uint256 public rewardPool;
@@ -31,6 +31,8 @@ contract Lottery {
     function upvote(uint256 _offset) external vote(_offset, 1) {
     }
     function downvote(uint256 _offset) external vote(_offset, -1) {
+    }
+    function unvote(uint256 _offset) external vote(_offset, 0) {
     }
     function endEpoch() external {
         require(era() >= epochTimestamp + 1 days);
@@ -53,7 +55,7 @@ contract Lottery {
                     topVotes[j] = topVotes[j-1];
                     winners[j] = winners[j-1];
                     j--;
-                    if (j==0) {
+                    if (j == 0) {
                         break;
                     }
                 }
