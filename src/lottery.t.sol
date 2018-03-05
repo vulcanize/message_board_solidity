@@ -36,6 +36,9 @@ contract Voter {
     function post() external {
         forum.post(0x0, 0x0);
     }
+    function claim(uint8 _index) external {
+        lottery.claim(_index);
+    }
 }
 contract LotteryTest is DSTest {
     Token token;
@@ -180,6 +183,10 @@ contract LotteryTest is DSTest {
         assertEq(lottery.payouts(1), v2);
         assertEq(lottery.payouts(2), this);
         assertEq(lottery.payouts(3), 0x0);
+
+        v1.claim(0);
+        v2.claim(1);
+        lottery.claim(2);
     }
 
     function test_upvoteDownvote() public {

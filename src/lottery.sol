@@ -47,17 +47,18 @@ contract Lottery {
             int256 current = votes[i];
             if (current > topVotes[4]) {
                 // insert it
-                uint256 j = 4;
-                do {
-                    if (topVotes[j] < current && j > 0) {
-                        topVotes[j] = topVotes[j-1];
-                        winners[j] = winners[j-1];
-                    } else {
-                        topVotes[j] = current;
-                        winners[j] = i;
-                        break;                       
+                // TODO consider funrolling this loop
+                uint8 j = 4;
+                while (topVotes[j-1] < current) {
+                    topVotes[j] = topVotes[j-1];
+                    winners[j] = winners[j-1];
+                    j--;
+                    if (j==0) {
+                        break;
                     }
-                } while (j --> 0);
+                }
+                topVotes[j] = current;
+                winners[j] = i;
             }
             votes[i] = 0;
         }
