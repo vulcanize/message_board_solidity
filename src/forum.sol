@@ -35,6 +35,7 @@ contract Forum {
     }
 
     // a parent of 0x0 indicates root topic
+    // TODO change to bytes if content hash is longer than 32 bytes
     event Topic(uint256 _parent, bytes32 contentHash);
     function post(uint256 _parent, bytes32 _contentHash) external {
         require(token.transferFrom(msg.sender, beneficiary, 1 ether));

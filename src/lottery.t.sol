@@ -16,6 +16,27 @@ contract LotteryMock is Lottery {
         return _now;
     }
 }
+contract Voter {
+    Lottery lottery;
+    Forum forum;
+    Token token;
+    function Voter (Lottery _lottery, Forum _forum, Token _token) public {
+        lottery = _lottery;
+        forum = _forum;
+        token = _token;
+        token.approve(lottery, 5 ether);
+        token.approve(forum, 5 ether);
+    }
+    function upvote(uint _index) external {
+        lottery.upvote(_index);
+    }
+    function downvote(uint _index) external {
+        lottery.downvote(_index);
+    }
+    function post() external {
+        forum.post(0x0, 0x0);
+    }
+}
 contract LotteryTest is DSTest {
     Token token;
     Forum forum;
@@ -114,5 +135,54 @@ contract LotteryTest is DSTest {
         lottery.downvote(3);
         nextEpoch();
         assertNoWinners();
+    }
+
+    function test_epochRanking() public test {
+        // 1
+        forum.post(0x0, 0x0);
+        // 2
+        forum.post(0x0, 0x0);
+
+        Voter v1 = new Voter(lottery, forum, token);
+        token.transfer(v1, 10 ether);
+        // 3
+        v1.post();
+
+        Voter v2 = new Voter(lottery, forum, token);
+        token.transfer(v2, 10 ether);
+        // 4
+        v2.post();
+
+        nextEpoch();
+        assertNoWinners();
+
+        // 1: +1
+        lottery.upvote(1);
+        v1.upvote(1);
+        v2.downvote(1);
+
+        // 2: -1
+        lottery.downvote(2);
+        v1.upvote(2);
+        v2.downvote(2);
+
+        // 3: +3
+        lottery.upvote(3);
+        v1.upvote(3);
+        v2.upvote(3);
+
+        // 4: +2
+        lottery.upvote(4);
+        v2.upvote(4);
+
+        nextEpoch();
+        assertEq(lottery.payouts(0), v1);
+        assertEq(lottery.payouts(1), v2);
+        assertEq(lottery.payouts(2), this);
+        assertEq(lottery.payouts(3), 0x0);
+    }
+
+    function test_upvoteDownvote() public {
+        // TODO
     }
 }
