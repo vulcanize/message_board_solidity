@@ -18,8 +18,15 @@ contract LotteryMock is Lottery {
     }
 }
 contract RedeemerMock is Redeemer {
-    ERC20 from;
-    ERC20 to;
+    ERC20 public from;
+    ERC20 public to;
+    // the current version of solc does not recognize public vars as implementing public view methods
+    function to() public view returns (ERC20) {
+        return to;
+    }
+    function from() public view returns (ERC20) {
+        return from;
+    }
     function RedeemerMock(ERC20 _from, ERC20 _to) public {
         from = _from;
         to = _to;
@@ -27,6 +34,11 @@ contract RedeemerMock is Redeemer {
     function redeem() external {
         uint256 wad = from.balanceOf(msg.sender);
         from.transferFrom(msg.sender, this, wad);
+        to.transfer(msg.sender, wad);
+    }
+    function undo() external {
+        uint256 wad = to.balanceOf(msg.sender);
+        to.transferFrom(msg.sender, this, wad);
         to.transfer(msg.sender, wad);
     }
 }
@@ -59,11 +71,11 @@ contract Voter {
     function setToken(ERC20 _to) external {
         token = _to;
     }
-    function trySetForumToken(ERC20 _to, Redeemer _redeemer) external {
-        forum.setToken(_to, _redeemer);
+    function trySetForumToken(Redeemer _redeemer) external {
+        forum.redeem(_redeemer);
     }
-    function trySetLotteryToken(ERC20 _to, Redeemer _redeemer) external {
-        lottery.setToken(_to, _redeemer);
+    function trySetLotteryToken(Redeemer _redeemer) external {
+        lottery.redeem(_redeemer);
     }
 }
 contract LotteryTest is DSTest {
@@ -268,14 +280,14 @@ contract LotteryTest is DSTest {
 
     function test_ownerUpgrade() public test {
         assertEq(forum.owner(), this);
-        forum.setToken(successorToken, redeemer);
+        forum.redeem(redeemer);
     }
     function testFail_forumUpgrade() public test {
         Voter v1 = new Voter(lottery, forum, token);
-        v1.trySetForumToken(successorToken, redeemer);
+        v1.trySetForumToken(redeemer);
     }
     function testFail_lotteryUpgrade() public test {
         Voter v1 = new Voter(lottery, forum, token);
-        v1.trySetLotteryToken(successorToken, redeemer);
+        v1.trySetLotteryToken(redeemer);
     }
 }

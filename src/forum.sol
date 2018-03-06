@@ -4,7 +4,8 @@ import "ds-token/token.sol";
 import "./redeemer.sol";
 
 interface Beneficiary {
-    function setToken(ERC20 _to, Redeemer _redeemer) external;
+    function redeem(Redeemer _redeemer) external returns (ERC20);
+    function undo(Redeemer _redeemer) external returns (ERC20);
 }
 
 contract Forum {
@@ -35,9 +36,11 @@ contract Forum {
         beneficiary = _beneficiary;
     }
 
-    function setToken(ERC20 _to, Redeemer _redeemer) external onlyOwner {
-        beneficiary.setToken(_to, _redeemer);
-        token = _to;
+    function redeem(Redeemer _redeemer) external onlyOwner {
+        token = beneficiary.redeem(_redeemer);
+    }
+    function undo(Redeemer _redeemer) external onlyOwner {
+        token = beneficiary.undo(_redeemer);
     }
 
     function postCount() public view returns (uint256) {

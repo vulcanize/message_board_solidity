@@ -94,11 +94,21 @@ contract Lottery is Beneficiary {
         payouts[_payout] = 0;
         token.transfer(msg.sender, reward(_payout));
     }
-    function setToken(ERC20 _to, Redeemer _redeemer) external {
+    function redeem(Redeemer _redeemer) external returns (ERC20) {
         require(msg.sender == address(forum));
+        require(_redeemer.from() == token);
+        ERC20 to = _redeemer.to();
         token.approve(_redeemer, token.balanceOf(this));
         _redeemer.redeem();
-        token = _to;
+        return token = to;
+    }
+    function undo(Redeemer _redeemer) external returns (ERC20) {
+        require(msg.sender == address(forum));
+        require(_redeemer.to() == token);
+        ERC20 from = _redeemer.from();
+        token.approve(_redeemer, token.balanceOf(this));
+        _redeemer.undo();
+        return token = from;
     }
     function era() internal view returns (uint256) {
         return now;
