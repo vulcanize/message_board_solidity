@@ -1,6 +1,11 @@
 pragma solidity^0.4.19;
 
 import "ds-token/token.sol";
+import "./redeemer.sol";
+
+interface Beneficiary {
+    function setToken(ERC20 _to, Redeemer _redeemer) external;
+}
 
 contract Forum {
     address[] public posters;
@@ -8,7 +13,7 @@ contract Forum {
     // this token *must* assert in transferFrom without allowance
     ERC20 public token;
     // receives all the tokens
-    address public beneficiary;
+    Beneficiary public beneficiary;
     address public owner;
 
     function Forum (ERC20 _token) public {
@@ -26,8 +31,13 @@ contract Forum {
         owner = _owner;
     }
 
-    function setBeneficiary(address _beneficiary) external onlyOwner {
+    function setBeneficiary(Beneficiary _beneficiary) external onlyOwner {
         beneficiary = _beneficiary;
+    }
+
+    function setToken(ERC20 _to, Redeemer _redeemer) external onlyOwner {
+        beneficiary.setToken(_to, _redeemer);
+        token = _to;
     }
 
     function postCount() public view returns (uint256) {

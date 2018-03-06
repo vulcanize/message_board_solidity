@@ -1,9 +1,9 @@
 pragma solidity^0.4.19;
 
-import "./token.sol";
 import "./forum.sol";
+import "./redeemer.sol";
 
-contract Lottery {
+contract Lottery is Beneficiary {
     // this token *must* assert in transferFrom without allowance
     ERC20 token;
     Forum forum;
@@ -16,7 +16,7 @@ contract Lottery {
     uint256 public rewardPool;
     address[5] public payouts;
 
-    function Lottery(Token _token, Forum _forum) public {
+    function Lottery(ERC20 _token, Forum _forum) public {
         token = _token;
         forum = _forum;
     }
@@ -93,6 +93,12 @@ contract Lottery {
         require(payouts[_payout] == msg.sender);
         payouts[_payout] = 0;
         token.transfer(msg.sender, reward(_payout));
+    }
+    function setToken(ERC20 _to, Redeemer _redeemer) external {
+        require(msg.sender == address(forum));
+        token.approve(_redeemer, token.balanceOf(this));
+        _redeemer.redeem();
+        token = _to;
     }
     function era() internal view returns (uint256) {
         return now;

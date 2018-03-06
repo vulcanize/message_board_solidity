@@ -1,10 +1,11 @@
 pragma solidity^0.4.19;
 
 import "./lottery.sol";
+import "./token.sol";
 import "ds-test/test.sol";
 
 contract LotteryMock is Lottery {
-    function LotteryMock(Token _token, Forum _forum) Lottery(_token, _forum) public {}
+    function LotteryMock(ERC20 _token, Forum _forum) Lottery(_token, _forum) public {}
     function setRewardPool(uint256 _rewardPool) public {
         rewardPool = _rewardPool;
     }
@@ -16,10 +17,23 @@ contract LotteryMock is Lottery {
         return _now;
     }
 }
+contract RedeemerMock is Redeemer {
+    ERC20 from;
+    ERC20 to;
+    function RedeemerMock(ERC20 _from, ERC20 _to) public {
+        from = _from;
+        to = _to;
+    }
+    function redeem() external {
+        uint256 wad = from.balanceOf(msg.sender);
+        from.transferFrom(msg.sender, this, wad);
+        to.transfer(msg.sender, wad);
+    }
+}
 contract Voter {
     Lottery lottery;
     Forum forum;
-    Token token;
+    ERC20 token;
     function Voter (Lottery _lottery, Forum _forum, Token _token) public {
         lottery = _lottery;
         forum = _forum;
@@ -42,15 +56,31 @@ contract Voter {
     function claim(uint8 _index) external {
         lottery.claim(_index);
     }
+    function setToken(ERC20 _to) external {
+        token = _to;
+    }
+    function trySetForumToken(ERC20 _to, Redeemer _redeemer) external {
+        forum.setToken(_to, _redeemer);
+    }
+    function trySetLotteryToken(ERC20 _to, Redeemer _redeemer) external {
+        lottery.setToken(_to, _redeemer);
+    }
 }
 contract LotteryTest is DSTest {
     Token token;
     Forum forum;
     LotteryMock lottery;
+    ERC20 successorToken;
+    Redeemer redeemer;
     function setUp() public {
-        token = new Token(1000000000 ether);
+        uint256 supply  = 1000000000 ether;
+        token = new Token(supply);
         forum = new Forum(token);
         lottery = new LotteryMock(token, forum);
+        forum.setBeneficiary(lottery);
+        successorToken = new Token(supply);
+        redeemer = new RedeemerMock(token, successorToken);
+        successorToken.transfer(redeemer, supply);
     }
     modifier test {
         token.approve(forum, 10 ether);
@@ -234,5 +264,18 @@ contract LotteryTest is DSTest {
     function testFail_noTokens() public test {
         Voter v1 = new Voter(lottery, forum, token);
         v1.upvote(1);
+    }
+
+    function test_ownerUpgrade() public test {
+        assertEq(forum.owner(), this);
+        forum.setToken(successorToken, redeemer);
+    }
+    function testFail_forumUpgrade() public test {
+        Voter v1 = new Voter(lottery, forum, token);
+        v1.trySetForumToken(successorToken, redeemer);
+    }
+    function testFail_lotteryUpgrade() public test {
+        Voter v1 = new Voter(lottery, forum, token);
+        v1.trySetLotteryToken(successorToken, redeemer);
     }
 }
