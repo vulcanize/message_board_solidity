@@ -39,7 +39,7 @@ contract RedeemerMock is Redeemer {
     function undo() external {
         uint256 wad = to.balanceOf(msg.sender);
         to.transferFrom(msg.sender, this, wad);
-        to.transfer(msg.sender, wad);
+        from.transfer(msg.sender, wad);
     }
 }
 contract Voter {
@@ -278,9 +278,39 @@ contract LotteryTest is DSTest {
         v1.upvote(1);
     }
 
+    function redeem() internal {
+        forum.redeem(redeemer);
+
+        uint256 balanceBefore = token.balanceOf(this);
+        token.approve(redeemer, balanceBefore);
+        redeemer.redeem();
+        assertEq(balanceBefore, successorToken.balanceOf(this));
+        successorToken.approve(forum, 10 ether);
+        successorToken.approve(lottery, 10 ether);
+    }
+
+    function undo() internal {
+        forum.undo(redeemer);
+
+        uint256 balanceBefore = successorToken.balanceOf(this);
+        successorToken.approve(redeemer, balanceBefore);
+        redeemer.undo();
+        assertEq(token.balanceOf(this), balanceBefore);
+
+        token.approve(forum, 10 ether);
+        token.approve(lottery, 10 ether);
+    }
+
     function test_ownerUpgrade() public test {
         assertEq(forum.owner(), this);
-        forum.redeem(redeemer);
+
+        forum.post(0x0, 0x0);
+
+        redeem();
+        forum.post(0x0, 0x0);
+
+        undo();
+        forum.post(0x0, 0x0);
     }
     function testFail_forumUpgrade() public test {
         Voter v1 = new Voter(lottery, forum, token);

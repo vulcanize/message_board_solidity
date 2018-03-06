@@ -13,7 +13,7 @@ contract Forum {
 
     // this token *must* assert in transferFrom without allowance
     ERC20 public token;
-    // receives all the tokens
+    // receives all the post tokens
     Beneficiary public beneficiary;
     address public owner;
 
@@ -47,6 +47,7 @@ contract Forum {
         return posters.length;
     }
 
+    // the total ordering of all events on a smart contract is defined
     // a parent of 0x0 indicates root topic
     // by convention, the bytes32 is a SHA2-256 content hash
     event Topic(uint256 _parent, bytes32 contentHash);
