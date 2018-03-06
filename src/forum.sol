@@ -8,7 +8,15 @@ interface Beneficiary {
     function undo(Redeemer _redeemer) external returns (ERC20);
 }
 
-contract Forum {
+contract ForumEvents {
+    // the total ordering of all events on a smart contract is defined
+    // a parent of 0x0 indicates root topic
+    // by convention, the bytes32 is a keccak-256 content hash
+    // the multihash prefix for this is 1b,20
+    event Topic(uint256 _parent, bytes32 contentHash);
+}
+
+contract Forum is ForumEvents {
     address[] public posters;
 
     // this token *must* assert in transferFrom without allowance
@@ -47,10 +55,6 @@ contract Forum {
         return posters.length;
     }
 
-    // the total ordering of all events on a smart contract is defined
-    // a parent of 0x0 indicates root topic
-    // by convention, the bytes32 is a SHA2-256 content hash
-    event Topic(uint256 _parent, bytes32 contentHash);
     function post(uint256 _parent, bytes32 _contentHash) external {
         require(token.transferFrom(msg.sender, beneficiary, 1 ether));
         Topic(_parent, _contentHash);

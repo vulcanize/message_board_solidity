@@ -84,7 +84,7 @@ contract Voter {
         lottery.undo(_redeemer);
     }
 }
-contract LotteryTest is DSTest {
+contract LotteryTest is DSTest, ForumEvents {
     Token token;
     Forum forum;
     LotteryMock lottery;
@@ -333,5 +333,15 @@ contract LotteryTest is DSTest {
     function testFail_lotteryDowngrade() public test {
         Voter v1 = new Voter(lottery, forum, token);
         v1.tryUndoLotteryToken(redeemer);
+    }
+    function test_postEvents() public test {
+        expectEventsExact(forum);
+        Topic(0x0, 0x0);
+        Topic(0x0, keccak256("Hello"));
+        Topic(0x2, keccak256("World"));
+
+        forum.post(0x0, 0x0);
+        forum.post(0x0, keccak256("Hello"));
+        forum.post(0x2, keccak256("World"));
     }
 }
