@@ -1,6 +1,6 @@
-#Lottery Forum
+# Lottery Forum
 
-##How to run the tests
+## How to run the tests
 
 ```
 dapp update
