@@ -71,11 +71,17 @@ contract Voter {
     function setToken(ERC20 _to) external {
         token = _to;
     }
-    function trySetForumToken(Redeemer _redeemer) external {
+    function tryRedeemForumToken(Redeemer _redeemer) external {
         forum.redeem(_redeemer);
     }
-    function trySetLotteryToken(Redeemer _redeemer) external {
+    function tryRedeemLotteryToken(Redeemer _redeemer) external {
         lottery.redeem(_redeemer);
+    }
+    function tryUndoForumToken(Redeemer _redeemer) external {
+        forum.undo(_redeemer);
+    }
+    function tryUndoLotteryToken(Redeemer _redeemer) external {
+        lottery.undo(_redeemer);
     }
 }
 contract LotteryTest is DSTest {
@@ -314,10 +320,18 @@ contract LotteryTest is DSTest {
     }
     function testFail_forumUpgrade() public test {
         Voter v1 = new Voter(lottery, forum, token);
-        v1.trySetForumToken(redeemer);
+        v1.tryRedeemForumToken(redeemer);
     }
     function testFail_lotteryUpgrade() public test {
         Voter v1 = new Voter(lottery, forum, token);
-        v1.trySetLotteryToken(redeemer);
+        v1.tryRedeemLotteryToken(redeemer);
+    }
+    function testFail_forumDowngrade() public test {
+        Voter v1 = new Voter(lottery, forum, token);
+        v1.tryUndoForumToken(redeemer);
+    }
+    function testFail_lotteryDowngrade() public test {
+        Voter v1 = new Voter(lottery, forum, token);
+        v1.tryUndoLotteryToken(redeemer);
     }
 }
