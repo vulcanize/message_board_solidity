@@ -29,6 +29,7 @@ contract Forum is ForumEvents {
         token = _token;
         owner = msg.sender;
         posters.push(0); // no author for root post 0
+        Topic(0, 0);
     }
     
     modifier onlyOwner {
