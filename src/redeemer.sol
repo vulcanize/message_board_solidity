@@ -6,6 +6,6 @@ import "./token.sol";
 interface Redeemer {
     function redeem() external;
     function undo() external;
-    function to() public view returns (ERC20);
-    function from() public view returns (ERC20);
+    function to() external view returns (ERC20);
+    function from() external view returns (ERC20);
 }

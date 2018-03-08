@@ -21,10 +21,10 @@ contract RedeemerMock is Redeemer {
     ERC20 public from;
     ERC20 public to;
     // the current version of solc does not recognize public vars as implementing public view methods
-    function to() public view returns (ERC20) {
+    function to() external view returns (ERC20) {
         return to;
     }
-    function from() public view returns (ERC20) {
+    function from() external view returns (ERC20) {
         return from;
     }
     function RedeemerMock(ERC20 _from, ERC20 _to) public {
