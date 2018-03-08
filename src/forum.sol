@@ -57,7 +57,7 @@ contract Forum is ForumEvents {
     }
 
     function post(uint256 _parent, bytes32 _contentHash) external {
-        require(token.transferFrom(msg.sender, beneficiary, 1 ether));
+        require(token.transferFrom(msg.sender, beneficiary, 20 finney));
         Topic(_parent, _contentHash);
         posters.push(msg.sender);
     }
