@@ -1,6 +1,6 @@
 pragma solidity^0.4.19;
 
-import "ds-token/token.sol";
+import "./token.sol";
 import "./redeemer.sol";
 
 interface Beneficiary {
