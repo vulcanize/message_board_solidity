@@ -277,6 +277,8 @@ contract LotteryTest is DSTest, ForumEvents {
 
         v2.downvote(2);
         assertEq(lottery.votes(2), -1);
+        v2.downvote(2);
+        assertEq(lottery.votes(2), -1);
         v1.downvote(2);
         assertEq(lottery.votes(2), -2);
         lottery.downvote(2);
@@ -384,5 +386,64 @@ contract LotteryTest is DSTest, ForumEvents {
         v1.claim(0);
         undo();
         lottery.claim(1);
+
+        nextEpoch();
+        assertNoWinners();
+    }
+    function test_sixPosts() public test {
+        Voter v1 = new Voter(lottery, forum, token);
+        token.transfer(v1, 10 ether);
+        Voter v2 = new Voter(lottery, forum, token);
+        token.transfer(v2, 10 ether);
+        Voter v3 = new Voter(lottery, forum, token);
+        token.transfer(v3, 10 ether);
+
+        // 1 : 4
+        v1.post();
+        lottery.upvote(1);
+        v1.upvote(1);
+        v2.upvote(1);
+        v3.upvote(1);
+        // 2 : 3
+        v2.post();
+        v2.upvote(2);
+        lottery.upvote(2);
+        v3.upvote(2);
+        // 3 : 1
+        v3.post();
+        v3.upvote(3);
+        lottery.downvote(3);
+        v2.upvote(3);
+        // 4 : 2
+        forum.post(0x0, 0x0);
+        v1.upvote(4);
+        lottery.upvote(4);
+        // 5 : 1
+        forum.post(0x0, 0x0);
+        lottery.upvote(5);
+        // 6 : 3
+        v3.post();
+        v1.upvote(6);
+        v3.upvote(6);
+        lottery.upvote(6);
+
+        nextEpoch();
+        assertNoWinners();
+
+        nextEpoch();
+        assertEq(lottery.payouts(0), v1);
+        assertEq(lottery.payouts(1), v3);
+        assertEq(lottery.payouts(2), v2);
+        assertEq(lottery.payouts(3), this);
+        assertEq(lottery.payouts(4), this);
+        v1.claim(0);
+        v3.claim(1);
+        v2.claim(2);
+        lottery.claim(3);
+        lottery.claim(4);
+
+        nextEpoch();
+        assertNoWinners();
+        assertEq(lottery.rewardPool(), 0);
     }
 }
