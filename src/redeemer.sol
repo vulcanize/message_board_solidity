@@ -1,6 +1,6 @@
 pragma solidity^0.4.19;
 
-import "./token.sol";
+import "erc20/erc20.sol";
 // assumption: token upgrades through DappHub, such as https://etherscan.io/address/0x642ae78fafbb8032da552d619ad43f1d81e4dd7c#code
 // assumption: token upgrades are 1:1
 interface Redeemer {

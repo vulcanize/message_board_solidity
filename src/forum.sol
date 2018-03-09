@@ -1,6 +1,6 @@
 pragma solidity^0.4.19;
 
-import "./token.sol";
+import "erc20/erc20.sol";
 import "./redeemer.sol";
 
 interface Beneficiary {
