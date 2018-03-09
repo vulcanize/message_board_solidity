@@ -13,6 +13,11 @@ contract Lottery is Beneficiary {
     uint256 public epochCurrent;
     mapping (uint256 => int256) public votes;
     mapping (uint256 => mapping (address => int8)) voters;
+    address[] public posters;
+
+    function postCount() public view returns (uint256) {
+        return posters.length;
+    }
 
     uint256 public rewardPool;
     address[5] public payouts;
@@ -20,20 +25,24 @@ contract Lottery is Beneficiary {
     function Lottery(ERC20 _token, Forum _forum) public {
         token = _token;
         forum = _forum;
+        posters.push(0); // no author for root post 0
     }
 
-    modifier vote(uint256 _offset, int8 _direction) {
-        int8 priorVote = voters[_offset][msg.sender];
+    modifier vote(address _voter, uint256 _offset, int8 _direction) {
+        int8 priorVote = voters[_offset][_voter];
         votes[_offset] += _direction - priorVote;
-        voters[_offset][msg.sender] = _direction;
-        token.transferFrom(msg.sender, this, 20 finney);
+        voters[_offset][_voter] = _direction;
         _;
     }
-    function upvote(uint256 _offset) external vote(_offset, 1) {
+    modifier transfersToken(address _voter) {
+        token.transferFrom(_voter, this, 20 finney);
+        _;
     }
-    function downvote(uint256 _offset) external vote(_offset, -1) {
+    function upvote(uint256 _offset) external vote(msg.sender, _offset, 1) transfersToken(msg.sender) {
     }
-    function unvote(uint256 _offset) external vote(_offset, 0) {
+    function downvote(uint256 _offset) external vote(msg.sender, _offset, -1) transfersToken(msg.sender) {
+    }
+    function unvote(uint256 _offset) external vote(msg.sender, _offset, 0) transfersToken(msg.sender) {
     }
     function endEpoch() external {
         require(era() >= epochTimestamp + 1 days);
@@ -68,12 +77,12 @@ contract Lottery is Beneficiary {
 
         // write the new winners
         for (i = 0; i < 5; i++) {
-            payouts[i] = forum.posters(winners[i]);
+            payouts[i] = posters[winners[i]];
         }
         // refresh the pool
         rewardPool = token.balanceOf(this);
         epochPrior = epochCurrent;
-        epochCurrent = forum.postCount();
+        epochCurrent = posters.length;
     }
     function reward(uint8 _payout) public view returns (uint256) {
         // I wish we had switch()
@@ -95,8 +104,11 @@ contract Lottery is Beneficiary {
         payouts[_payout] = 0;
         token.transfer(msg.sender, reward(_payout));
     }
-    function redeem(Redeemer _redeemer) external returns (ERC20) {
+    modifier onlyForum {
         require(msg.sender == address(forum));
+        _;
+    }
+    function redeem(Redeemer _redeemer) external onlyForum returns (ERC20) {
         require(_redeemer.from() == token);
 
         token.approve(_redeemer, token.balanceOf(this));
@@ -105,8 +117,7 @@ contract Lottery is Beneficiary {
         token = to;
         return to;
     }
-    function undo(Redeemer _redeemer) external returns (ERC20) {
-        require(msg.sender == address(forum));
+    function undo(Redeemer _redeemer) external onlyForum returns (ERC20) {
         require(_redeemer.to() == token);
 
         token.approve(_redeemer, token.balanceOf(this));
@@ -118,4 +129,10 @@ contract Lottery is Beneficiary {
     function era() internal view returns (uint256) {
         return now;
     }
+    modifier pushPoster(address _poster) {
+        posters.push(_poster);
+        _;
+    }
+    function onPostUpvote(address _poster) external onlyForum vote(_poster, posters.length, 1) pushPoster(_poster) {}
+    function onPost(address _poster) external onlyForum pushPoster(_poster) {}
 }

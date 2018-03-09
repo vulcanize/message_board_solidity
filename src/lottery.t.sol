@@ -65,6 +65,9 @@ contract Voter {
     function post() external {
         forum.post(0x0, 0x0);
     }
+    function postAndUpvote() external {
+        forum.postAndUpvote(0x0, 0x0);
+    }
     function claim(uint8 _index) external {
         lottery.claim(_index);
     }
@@ -266,6 +269,7 @@ contract LotteryTest is DSTest, ForumEvents {
         assertEq(lottery.votes(1), 1);
         v1.upvote(1);
         assertEq(lottery.votes(1), 2);
+        v1.postAndUpvote();
         v2.upvote(1);
         assertEq(lottery.votes(1), 3);
         lottery.downvote(1);
@@ -283,6 +287,8 @@ contract LotteryTest is DSTest, ForumEvents {
         assertEq(lottery.votes(2), -2);
         lottery.downvote(2);
         assertEq(lottery.votes(2), -3);
+        v1.postAndUpvote();
+        assertEq(lottery.votes(2), -1);
 
         assertEq(lottery.votes(3), 0);
         v2.unvote(3);
@@ -293,6 +299,8 @@ contract LotteryTest is DSTest, ForumEvents {
         assertEq(lottery.votes(3), 2);
         v2.downvote(3);
         assertEq(lottery.votes(3), 0);
+        v2.postAndUpvote();
+        assertEq(lottery.votes(3), 2);
         v2.unvote(3);
         assertEq(lottery.votes(3), 1);
     }
@@ -329,12 +337,15 @@ contract LotteryTest is DSTest, ForumEvents {
         assertEq(forum.owner(), this);
 
         forum.post(0x0, 0x0);
+        forum.postAndUpvote(0x0, 0x0);
 
         redeem();
         forum.post(0x0, 0x0);
+        forum.postAndUpvote(0x0, 0x0);
 
         undo();
         forum.post(0x0, 0x0);
+        forum.postAndUpvote(0x0, 0x0);
     }
     function testFail_forumUpgrade() public test {
         Voter v1 = new Voter(lottery, forum, token);
@@ -360,7 +371,7 @@ contract LotteryTest is DSTest, ForumEvents {
 
         forum.post(0x0, 0x0);
         forum.post(0x0, keccak256("Hello"));
-        forum.post(0x2, keccak256("World"));
+        forum.postAndUpvote(0x2, keccak256("World"));
     }
     function test_redeemerReward() public test {
         Voter v1 = new Voter(lottery, forum, token);
@@ -399,32 +410,27 @@ contract LotteryTest is DSTest, ForumEvents {
         token.transfer(v3, 10 ether);
 
         // 1 : 4
-        v1.post();
+        v1.postAndUpvote();
         lottery.upvote(1);
-        v1.upvote(1);
         v2.upvote(1);
         v3.upvote(1);
         // 2 : 3
-        v2.post();
-        v2.upvote(2);
+        v2.postAndUpvote();
         lottery.upvote(2);
         v3.upvote(2);
         // 3 : 1
-        v3.post();
-        v3.upvote(3);
+        v3.postAndUpvote();
         lottery.downvote(3);
         v2.upvote(3);
         // 4 : 2
-        forum.post(0x0, 0x0);
+        forum.postAndUpvote(0x0, 0x0);
         v1.upvote(4);
-        lottery.upvote(4);
         // 5 : 1
         forum.post(0x0, 0x0);
         lottery.upvote(5);
         // 6 : 3
-        v3.post();
+        v3.postAndUpvote();
         v1.upvote(6);
-        v3.upvote(6);
         lottery.upvote(6);
 
         nextEpoch();

@@ -6,6 +6,8 @@ import "./redeemer.sol";
 interface Beneficiary {
     function redeem(Redeemer _redeemer) external returns (ERC20);
     function undo(Redeemer _redeemer) external returns (ERC20);
+    function onPost(address _poster) external;
+    function onPostUpvote(address _poster) external;
 }
 
 contract ForumEvents {
@@ -17,7 +19,6 @@ contract ForumEvents {
 }
 
 contract Forum is ForumEvents {
-    address[] public posters;
 
     // though ERC20 says tokens *should* revert in transferFrom without allowance
     // this token *must* revert
@@ -29,7 +30,6 @@ contract Forum is ForumEvents {
     function Forum (ERC20 _token) public {
         token = _token;
         owner = msg.sender;
-        posters.push(0); // no author for root post 0
         Topic(0, 0);
     }
     
@@ -53,13 +53,15 @@ contract Forum is ForumEvents {
         token = beneficiary.undo(_redeemer);
     }
 
-    function postCount() public view returns (uint256) {
-        return posters.length;
-    }
-
     function post(uint256 _parent, bytes32 _contentHash) external {
         token.transferFrom(msg.sender, beneficiary, 20 finney);
         Topic(_parent, _contentHash);
-        posters.push(msg.sender);
+        beneficiary.onPost(msg.sender);
+    }
+
+    function postAndUpvote(uint256 _parent, bytes32 _contentHash) external {
+        token.transferFrom(msg.sender, beneficiary, 40 finney);
+        Topic(_parent, _contentHash);
+        beneficiary.onPostUpvote(msg.sender);
     }
 }
