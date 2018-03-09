@@ -4,7 +4,8 @@ import "./forum.sol";
 import "./redeemer.sol";
 
 contract Lottery is Beneficiary {
-    // this token *must* assert in transferFrom without allowance
+    // though ERC20 says tokens *should* revert in transferFrom without allowance
+    // this token *must* revert
     ERC20 token;
     Forum forum;
     uint256 public epochTimestamp;
@@ -25,7 +26,7 @@ contract Lottery is Beneficiary {
         int8 priorVote = voters[_offset][msg.sender];
         votes[_offset] += _direction - priorVote;
         voters[_offset][msg.sender] = _direction;
-        require(token.transferFrom(msg.sender, this, 20 finney));
+        token.transferFrom(msg.sender, this, 20 finney);
         _;
     }
     function upvote(uint256 _offset) external vote(_offset, 1) {

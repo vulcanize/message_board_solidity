@@ -19,7 +19,8 @@ contract ForumEvents {
 contract Forum is ForumEvents {
     address[] public posters;
 
-    // this token *must* assert in transferFrom without allowance
+    // though ERC20 says tokens *should* revert in transferFrom without allowance
+    // this token *must* revert
     ERC20 public token;
     // receives all the post tokens
     Beneficiary public beneficiary;
@@ -57,7 +58,7 @@ contract Forum is ForumEvents {
     }
 
     function post(uint256 _parent, bytes32 _contentHash) external {
-        require(token.transferFrom(msg.sender, beneficiary, 20 finney));
+        token.transferFrom(msg.sender, beneficiary, 20 finney);
         Topic(_parent, _contentHash);
         posters.push(msg.sender);
     }
