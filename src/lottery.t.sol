@@ -71,6 +71,22 @@ contract Voter {
     function setToken(ERC20 _to) external {
         token = _to;
     }
+    function redeem(Redeemer _redeemer) external {
+        ERC20 from = _redeemer.from();
+        ERC20 to = _redeemer.to();
+        from.approve(_redeemer, from.balanceOf(this));
+        _redeemer.redeem();
+        to.approve(forum, to.balanceOf(this));
+        to.approve(lottery, to.balanceOf(this));
+    }
+    function undo(Redeemer _redeemer) external {
+        ERC20 from = _redeemer.from();
+        ERC20 to = _redeemer.to();
+        to.approve(_redeemer, to.balanceOf(this));
+        _redeemer.undo();
+        from.approve(forum, from.balanceOf(this));
+        from.approve(lottery, from.balanceOf(this));
+    }
     function tryRedeemForumToken(Redeemer _redeemer) external {
         forum.redeem(_redeemer);
     }
@@ -343,5 +359,30 @@ contract LotteryTest is DSTest, ForumEvents {
         forum.post(0x0, 0x0);
         forum.post(0x0, keccak256("Hello"));
         forum.post(0x2, keccak256("World"));
+    }
+    function test_redeemerReward() public test {
+        Voter v1 = new Voter(lottery, forum, token);
+        token.transfer(v1, 10 ether);
+        // 1
+        v1.post();
+        // 2
+        forum.post(0x0, 0x0);
+        v1.upvote(1);
+        lottery.upvote(1);
+
+        nextEpoch();
+        redeem();
+        assertNoWinners();
+        v1.redeem(redeemer);
+        v1.upvote(2);
+
+        nextEpoch();
+        assertEq(lottery.payouts(0), v1);
+        assertEq(lottery.payouts(1), this);
+        assertEq(lottery.payouts(2), 0x0);
+
+        v1.claim(0);
+        undo();
+        lottery.claim(1);
     }
 }
