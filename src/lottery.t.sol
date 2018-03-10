@@ -102,6 +102,12 @@ contract Voter {
     function tryUndoLotteryToken(Redeemer _redeemer) external {
         lottery.undo(_redeemer);
     }
+    function trySetForumOwner(address _owner) external {
+        forum.setOwner(_owner);
+    }
+    function trySetLotteryOwner(address _owner) external {
+        lottery.setOwner(_owner);
+    }
 }
 contract LotteryTest is DSTest, ForumEvents {
     Token token;
@@ -362,6 +368,28 @@ contract LotteryTest is DSTest, ForumEvents {
     function testFail_lotteryDowngrade() public test {
         Voter v1 = new Voter(lottery, forum, token);
         v1.tryUndoLotteryToken(redeemer);
+    }
+    function testFail_lotterySetOwner() public test {
+        Voter v1 = new Voter(lottery, forum, token);
+        v1.trySetLotteryOwner(v1);
+    }
+    function testFail_forumSetOwner() public test {
+        Voter v1 = new Voter(lottery, forum, token);
+        v1.trySetForumOwner(v1);
+    }
+    function test_setOwner() public test {
+        assertEq(forum.owner(), this);
+        assertEq(lottery.owner(), this);
+
+        Voter v1 = new Voter(lottery, forum, token);
+        forum.setOwner(v1);
+        lottery.setOwner(v1);
+        v1.trySetForumOwner(this);
+        v1.trySetLotteryOwner(this);
+        forum.setOwner(v1);
+        lottery.setOwner(v1);
+        v1.trySetForumOwner(this);
+        v1.trySetLotteryOwner(this);
     }
     function test_postEvents() public test {
         expectEventsExact(forum);
