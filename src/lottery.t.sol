@@ -91,13 +91,13 @@ contract Voter {
         from.approve(lottery, from.balanceOf(this));
     }
     function tryRedeemForumToken(Redeemer _redeemer) external {
-        forum.redeem(_redeemer);
+        lottery.redeem(_redeemer);
     }
     function tryRedeemLotteryToken(Redeemer _redeemer) external {
         lottery.redeem(_redeemer);
     }
     function tryUndoForumToken(Redeemer _redeemer) external {
-        forum.undo(_redeemer);
+        lottery.undo(_redeemer);
     }
     function tryUndoLotteryToken(Redeemer _redeemer) external {
         lottery.undo(_redeemer);
@@ -112,7 +112,7 @@ contract LotteryTest is DSTest, ForumEvents {
     function setUp() public {
         uint256 supply  = 1000000000 ether;
         token = new Token(supply);
-        forum = new Forum(token);
+        forum = new Forum();
         lottery = new LotteryMock(token, forum);
         forum.setBeneficiary(lottery);
         successorToken = new Token(supply);
@@ -311,7 +311,7 @@ contract LotteryTest is DSTest, ForumEvents {
     }
 
     function redeem() internal {
-        forum.redeem(redeemer);
+        lottery.redeem(redeemer);
 
         uint256 balanceBefore = token.balanceOf(this);
         token.approve(redeemer, balanceBefore);
@@ -322,7 +322,7 @@ contract LotteryTest is DSTest, ForumEvents {
     }
 
     function undo() internal {
-        forum.undo(redeemer);
+        lottery.undo(redeemer);
 
         uint256 balanceBefore = successorToken.balanceOf(this);
         successorToken.approve(redeemer, balanceBefore);

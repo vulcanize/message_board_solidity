@@ -6,14 +6,18 @@ import "./redeemer.sol";
 contract Lottery is Beneficiary {
     // though ERC20 says tokens *should* revert in transferFrom without allowance
     // this token *must* revert
-    ERC20 token;
-    Forum forum;
+    ERC20 public token;
+    Forum public forum;
+    address public owner;
     uint256 public epochTimestamp;
     uint256 public epochPrior;
     uint256 public epochCurrent;
     mapping (uint256 => int256) public votes;
     mapping (uint256 => mapping (address => int8)) voters;
     address[] public posters;
+
+    uint256 public postCost;
+    uint256 public nextPostCost;
 
     function postCount() public view returns (uint256) {
         return posters.length;
@@ -25,7 +29,10 @@ contract Lottery is Beneficiary {
     function Lottery(ERC20 _token, Forum _forum) public {
         token = _token;
         forum = _forum;
+        owner = msg.sender;
         posters.push(0); // no author for root post 0
+        postCost = 20 finney;
+        nextPostCost = 20 finney;
     }
 
     modifier vote(address _voter, uint256 _offset, int8 _direction) {
@@ -35,7 +42,7 @@ contract Lottery is Beneficiary {
         _;
     }
     modifier transfersToken(address _voter) {
-        token.transferFrom(_voter, this, 20 finney);
+        token.transferFrom(_voter, this, postCost);
         _;
     }
     function upvote(uint256 _offset) external vote(msg.sender, _offset, 1) transfersToken(msg.sender) {
@@ -83,6 +90,9 @@ contract Lottery is Beneficiary {
         rewardPool = token.balanceOf(this);
         epochPrior = epochCurrent;
         epochCurrent = posters.length;
+        if (nextPostCost != postCost) {
+            postCost = nextPostCost;
+        }
     }
     function reward(uint8 _payout) public view returns (uint256) {
         // I wish we had switch()
@@ -104,11 +114,17 @@ contract Lottery is Beneficiary {
         payouts[_payout] = 0;
         token.transfer(msg.sender, reward(_payout));
     }
-    modifier onlyForum {
-        require(msg.sender == address(forum));
+    modifier onlyOwner {
+        require (msg.sender == owner);
         _;
     }
-    function redeem(Redeemer _redeemer) external onlyForum returns (ERC20) {
+    function setOwner(address _owner) external onlyOwner {
+        owner = _owner;
+    }
+    function setNextPostCost(uint256 _nextPostCost) external onlyOwner {
+        nextPostCost = _nextPostCost;
+    }
+    function redeem(Redeemer _redeemer) external onlyOwner returns (ERC20) {
         require(_redeemer.from() == token);
 
         token.approve(_redeemer, token.balanceOf(this));
@@ -117,7 +133,7 @@ contract Lottery is Beneficiary {
         token = to;
         return to;
     }
-    function undo(Redeemer _redeemer) external onlyForum returns (ERC20) {
+    function undo(Redeemer _redeemer) external onlyOwner returns (ERC20) {
         require(_redeemer.to() == token);
 
         token.approve(_redeemer, token.balanceOf(this));
@@ -133,6 +149,10 @@ contract Lottery is Beneficiary {
         posters.push(_poster);
         _;
     }
-    function onPostUpvote(address _poster) external onlyForum vote(_poster, posters.length, 1) pushPoster(_poster) {}
-    function onPost(address _poster) external onlyForum pushPoster(_poster) {}
+    modifier onlyForum {
+        require(msg.sender == address(forum));
+        _;
+    }
+    function onPostUpvote(address _poster) external onlyForum vote(_poster, posters.length, 1) transfersToken(_poster) pushPoster(_poster) {}
+    function onPost(address _poster) external onlyForum transfersToken(_poster) pushPoster(_poster) {}
 }
