@@ -66,7 +66,8 @@ contract Lottery is Beneficiary {
             int256 current = votes[i];
             if (current > topVotes[4]) {
                 // insert it
-                // TODO consider funrolling this loop
+
+                /*
                 uint8 j = 4;
                 while (topVotes[j-1] < current) {
                     topVotes[j] = topVotes[j-1];
@@ -78,6 +79,40 @@ contract Lottery is Beneficiary {
                 }
                 topVotes[j] = current;
                 winners[j] = i;
+                */
+                // the code below is equivalent to the commented code above
+                if (current > topVotes[2]) {
+                    topVotes[4] = topVotes[3];
+                    topVotes[3] = topVotes[2];
+                    winners[4] = winners[3];
+                    winners[3] = winners[2];
+                    if (current > topVotes[1]) {
+                        topVotes[2] = topVotes[1];
+                        winners[2] = winners[1];
+                        if (current > topVotes[0]) {
+                            topVotes[1] = topVotes[0];
+                            topVotes[0] = current;
+                            winners[1] = winners[0];
+                            winners[0] = i;
+                        } else {
+                            topVotes[1] = current;
+                            winners[1] = i;
+                        }
+                    } else {
+                        topVotes[2] = current;
+                        winners[2] = i;
+                    }
+                } else {
+                    if (current > topVotes[3]) {
+                        topVotes[4] = topVotes[3];
+                        topVotes[3] = current;
+                        winners[4] = winners[3];
+                        winners[3] = i;
+                    } else {
+                        topVotes[4] = current;
+                        winners[4] = i;
+                    }
+                }
             }
             votes[i] = 0;
         }
