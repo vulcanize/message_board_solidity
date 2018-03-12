@@ -58,6 +58,7 @@ contract AppToken is AppTokenEvents,PausableToken {
 
         balances[_from] = balances[_from].sub(_value);
         balances[_to] = balances[_to].add(_value);
+        Transfer(_from, _to, _value);
     }
 
     function AppToken(address trustee1, address trustee2, address trustee3) public {
