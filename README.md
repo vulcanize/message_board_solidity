@@ -1,8 +1,9 @@
 # Lottery Forum
 
 ## Deploying
-There are two contracts to deploy:
+There are three contracts to deploy:
 
+- Token
 - Forum
 - Lottery
 
@@ -10,5 +11,7 @@ There are two contracts to deploy:
 
 ```
 dapp update
+ln -s . lib/zeppelin-solidity/src
+echo src >> .git/modules/zeppelin-solidity/info/exclude
 dapp test
 ```
