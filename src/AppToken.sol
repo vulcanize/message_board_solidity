@@ -59,7 +59,7 @@ contract AppToken is PausableToken {
         balances[_to] = balances[_to].add(_value);
     }
 
-    function initBoard(address trustee1, address trustee2, address trustee3) internal {
+    function AppToken(address trustee1, address trustee2, address trustee3) public {
         accounts[trustee1].permissions = BOARD;
         accounts[trustee2].permissions = BOARD;
         accounts[trustee3].permissions = BOARD;
