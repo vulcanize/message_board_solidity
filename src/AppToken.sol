@@ -28,11 +28,7 @@ import 'zeppelin-solidity/contracts/token/PausableToken.sol';
 / * replacement.denounce(a)
 / * replacement.denounce(b)
 */
-contract AppToken is PausableToken {
-    // Permissions Bitmap:
-    uint8 constant INSTALLED = 1;
-    uint8 constant BOARD = 2;
-
+contract AppTokenEvents {
     event StartRequest(address app, address approver);
     event Installed(address app);
     event StopRequest(address app, address stopper);
@@ -41,6 +37,11 @@ contract AppToken is PausableToken {
     event Revoked(address board);
     event Nominated(address nominee, address nominator);
     event Denounced(address denouncee, address denouncer);
+}
+contract AppToken is AppTokenEvents,PausableToken {
+    // Permissions Bitmap:
+    uint8 constant INSTALLED = 1;
+    uint8 constant BOARD = 2;
 
     mapping (address => Account) accounts;
     struct Account {
