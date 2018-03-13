@@ -4,7 +4,7 @@ import "./AppToken.sol";
 import "./forum.sol";
 import "./redeemer.sol";
 
-contract Lottery is Beneficiary {
+contract Lottery is Beneficiary, Sponsored {
     // though ERC20 says tokens *should* revert in transferFrom without allowance
     // this token *must* revert
     AppToken public token;
@@ -46,9 +46,9 @@ contract Lottery is Beneficiary {
         token.appTransfer(_voter, this, postCost);
         _;
     }
-    function upvote(uint256 _offset) external vote(msg.sender, _offset, 1) transfersToken(msg.sender) {
+    function upvote(uint256 _offset) external sponsored vote(msg.sender, _offset, 1) transfersToken(msg.sender) {
     }
-    function downvote(uint256 _offset) external vote(msg.sender, _offset, -1) transfersToken(msg.sender) {
+    function downvote(uint256 _offset) external sponsored vote(msg.sender, _offset, -1) transfersToken(msg.sender) {
     }
     function unvote(uint256 _offset) external vote(msg.sender, _offset, 0) transfersToken(msg.sender) {
     }
@@ -189,6 +189,6 @@ contract Lottery is Beneficiary {
         require(msg.sender == address(forum));
         _;
     }
-    function onPostUpvote(address _poster) external onlyForum vote(_poster, posters.length, 1) transfersToken(_poster) pushPoster(_poster) {}
+    function onPostUpvote(address _poster) sponsored external onlyForum vote(_poster, posters.length, 1) transfersToken(_poster) pushPoster(_poster) {}
     function onPost(address _poster) external onlyForum transfersToken(_poster) pushPoster(_poster) {}
 }
