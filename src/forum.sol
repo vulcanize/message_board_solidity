@@ -17,7 +17,7 @@ contract ForumEvents {
     event Topic(uint256 _parent, bytes32 contentHash);
 }
 
-contract Forum is Sponsored, ForumEvents {
+contract Forum is ForumEvents {
     // receives all the post tokens
     Beneficiary public beneficiary;
     address public owner;
@@ -40,12 +40,12 @@ contract Forum is Sponsored, ForumEvents {
         beneficiary = _beneficiary;
     }
 
-    function post(uint256 _parent, bytes32 _contentHash) external sponsored {
+    function post(uint256 _parent, bytes32 _contentHash) external {
         Topic(_parent, _contentHash);
         beneficiary.onPost(msg.sender);
     }
 
-    function postAndUpvote(uint256 _parent, bytes32 _contentHash) external sponsored {
+    function postAndUpvote(uint256 _parent, bytes32 _contentHash) external {
         Topic(_parent, _contentHash);
         beneficiary.onPostUpvote(msg.sender);
     }
