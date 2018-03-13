@@ -3,7 +3,7 @@
 ## Deploying
 There are three contracts to deploy:
 
-- Token
+- Token (menlo-token-crowdsale)
 - Forum
 - Lottery
 
