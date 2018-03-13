@@ -8,6 +8,7 @@ There are three contracts to deploy:
 - Lottery
 
 After creating these contracts, call `Forum.setBeneficiary(Lottery)` to link the forum with its payout system.
+Then, two of the Token's board members  must `install` the Lottery to allow `appTransfer`.
 
 ## How to run the tests
 
