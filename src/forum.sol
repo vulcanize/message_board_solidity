@@ -2,6 +2,8 @@ pragma solidity^0.4.19;
 
 import "erc20/erc20.sol";
 
+import "./Sponsored.sol";
+
 interface Beneficiary {
     function onPost(address _poster) external;
     function onPostUpvote(address _poster) external;
@@ -15,7 +17,7 @@ contract ForumEvents {
     event Topic(uint256 _parent, bytes32 contentHash);
 }
 
-contract Forum is ForumEvents {
+contract Forum is Sponsored, ForumEvents {
     // receives all the post tokens
     Beneficiary public beneficiary;
     address public owner;
@@ -38,12 +40,12 @@ contract Forum is ForumEvents {
         beneficiary = _beneficiary;
     }
 
-    function post(uint256 _parent, bytes32 _contentHash) external {
+    function post(uint256 _parent, bytes32 _contentHash) external sponsored {
         Topic(_parent, _contentHash);
         beneficiary.onPost(msg.sender);
     }
 
-    function postAndUpvote(uint256 _parent, bytes32 _contentHash) external {
+    function postAndUpvote(uint256 _parent, bytes32 _contentHash) external sponsored {
         Topic(_parent, _contentHash);
         beneficiary.onPostUpvote(msg.sender);
     }
