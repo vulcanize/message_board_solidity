@@ -2,6 +2,8 @@ pragma solidity^0.4.19;
 
 import "erc20/erc20.sol";
 
+import "./Sponsored.sol";
+
 interface Beneficiary {
     function onPost(address _poster) external;
     function onPostUpvote(address _poster) external;
