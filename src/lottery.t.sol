@@ -1,11 +1,11 @@
 pragma solidity^0.4.19;
 
 import "./lottery.sol";
-import "./token.sol";
+import "./AppToken.sol";
 import "ds-test/test.sol";
 
 contract LotteryMock is Lottery {
-    function LotteryMock(ERC20 _token, Forum _forum) Lottery(_token, _forum) public {}
+    function LotteryMock(AppToken _token, Forum _forum) Lottery(_token, _forum) public {}
     function setRewardPool(uint256 _rewardPool) public {
         rewardPool = _rewardPool;
     }
@@ -18,16 +18,16 @@ contract LotteryMock is Lottery {
     }
 }
 contract RedeemerMock is Redeemer {
-    ERC20 public from;
-    ERC20 public to;
+    AppToken public from;
+    AppToken public to;
     // the current version of solc does not recognize public vars as implementing public view methods
-    function to() external view returns (ERC20) {
+    function to() external view returns (AppToken) {
         return to;
     }
-    function from() external view returns (ERC20) {
+    function from() external view returns (AppToken) {
         return from;
     }
-    function RedeemerMock(ERC20 _from, ERC20 _to) public {
+    function RedeemerMock(AppToken _from, AppToken _to) public {
         from = _from;
         to = _to;
     }
@@ -45,13 +45,11 @@ contract RedeemerMock is Redeemer {
 contract Voter {
     Lottery lottery;
     Forum forum;
-    ERC20 token;
-    function Voter (Lottery _lottery, Forum _forum, Token _token) public {
+    AppToken token;
+    function Voter (Lottery _lottery, Forum _forum, AppToken _token) public {
         lottery = _lottery;
         forum = _forum;
         token = _token;
-        token.approve(lottery, 10 ether);
-        token.approve(forum, 10 ether);
     }
     function upvote(uint _index) external {
         lottery.upvote(_index);
@@ -71,8 +69,14 @@ contract Voter {
     function claim(uint8 _index) external {
         lottery.claim(_index);
     }
-    function setToken(ERC20 _to) external {
+    function setToken(AppToken _to) external {
         token = _to;
+    }
+    function setForum(Forum _forum) external {
+        forum = _forum;
+    }
+    function install(AppToken _token, address _app) external {
+        _token.install(_app);
     }
     function redeem(Redeemer _redeemer) external {
         ERC20 from = _redeemer.from();
@@ -109,31 +113,48 @@ contract Voter {
         lottery.setOwner(_owner);
     }
 }
+contract AppTokenMock is AppToken {
+    function AppTokenMock(uint256 balance, address admin1, address admin2, address admin3) AppToken(admin1, admin2, admin3) public {
+        balances[msg.sender] = balance;
+        Transfer(0x0, msg.sender, balance);
+    }
+}
 contract LotteryTest is DSTest, ForumEvents {
-    Token token;
+    Voter admin1;
+    Voter admin2;
+    AppToken token;
     Forum forum;
     LotteryMock lottery;
-    ERC20 successorToken;
+    AppToken successorToken;
     Redeemer redeemer;
     function setUp() public {
+        admin1 = new Voter(Lottery(0x0), Forum(0x0), AppToken(0x0));
+        admin2 = new Voter(Lottery(0x0), Forum(0x0), AppToken(0x0));
         uint256 supply  = 1000000000 ether;
-        token = new Token(supply);
+        token = new AppTokenMock(supply, msg.sender, admin1, admin2);
+        admin1.setToken(token);
+        admin2.setToken(token);
         forum = new Forum();
+        admin1.setForum(forum);
+        admin2.setForum(forum);
         lottery = new LotteryMock(token, forum);
         forum.setBeneficiary(lottery);
-        successorToken = new Token(supply);
+        successorToken = new AppTokenMock(supply, msg.sender, admin1, admin2);
         redeemer = new RedeemerMock(token, successorToken);
         successorToken.transfer(redeemer, supply);
     }
     modifier test {
-        token.approve(forum, 10 ether);
-        token.approve(lottery, 10 ether);
+        admin1.install(token, lottery);
+        admin2.install(token, lottery);
+        admin1.install(successorToken, lottery);
+        admin2.install(successorToken, lottery);
+        require(token.installed(lottery));
         _;
     }
-    function testFail_noApprovePost() public {
+    function testFail_noInstallPost() public {
         forum.post(0x0,0x0);
     }
-    function testFail_noApproveVote() public {
+    function testFail_noInstallVote() public {
         lottery.upvote(0);
     }
     function test_reward() public test {
@@ -323,8 +344,6 @@ contract LotteryTest is DSTest, ForumEvents {
         token.approve(redeemer, balanceBefore);
         redeemer.redeem();
         assertEq(balanceBefore, successorToken.balanceOf(this));
-        successorToken.approve(forum, 10 ether);
-        successorToken.approve(lottery, 10 ether);
     }
 
     function undo() internal {
@@ -334,9 +353,6 @@ contract LotteryTest is DSTest, ForumEvents {
         successorToken.approve(redeemer, balanceBefore);
         redeemer.undo();
         assertEq(token.balanceOf(this), balanceBefore);
-
-        token.approve(forum, 10 ether);
-        token.approve(lottery, 10 ether);
     }
 
     function test_ownerUpgrade() public test {
