@@ -1,3 +1,4 @@
+// Copyright (c) William Morriss, 2018
 pragma solidity^0.4.19;
 // when you change the solidity version, run test_conflict with k=1000000
 

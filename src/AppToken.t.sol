@@ -1,3 +1,4 @@
+// Copyright (c) William Morriss, 2018
 pragma solidity^0.4.18;
 
 import "ds-test/test.sol";
